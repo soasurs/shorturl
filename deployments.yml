@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shorturl-server
+spec:
+  selector:
+    matchLabels:
+      app: shorturl-server
+  template:
+    metadata:
+      labels:
+        app: shorturl-server
+    spec:
+      containers:
+      - name: shorturl-server
+        image: shorturl-server:20210612030125
+        imagePullPolicy: Never
+        env:
+          - name: POSTGRES_DSN
+            value: postgres://shorturl:shorturl@shorturl-postgres-svc/shorturl?sslmode=disable
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 3000
+          name: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shorturl-transform
+spec:
+  selector:
+    matchLabels:
+      app: shorturl-transform
+  template:
+    metadata:
+      labels:
+        app: shorturl-transform
+    spec:
+      containers:
+      - name: shorturl-transform
+        image: shorturl-transform:20210612030053
+        imagePullPolicy: Never
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 4000
+          name: grpc
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: shorturl-postgres
+spec:
+  selector:
+    matchLabels:
+      app: shorturl-postgres
+  serviceName: shorturl-postgres-svc
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: shorturl-postgres
+    spec:
+     containers:
+      - name: shorturl-postgres
+        image: postgres:13
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        env:
+          - name: POSTGRES_ROOT_PASSWORD
+            value: root
+          - name: POSTGRES_DB
+            value: shorturl
+          - name: POSTGRES_USER
+            value: shorturl
+          - name: POSTGRES_PASSWORD
+            value: shorturl
+        ports:
+          - containerPort: 5432
+            name: tcp
