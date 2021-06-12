@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: shorturl-postgres-pv-claim
+spec:
+  resources:
+    requests:
+      storage: 10G
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard

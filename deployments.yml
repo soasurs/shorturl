@@ -6,6 +6,7 @@ spec:
   selector:
     matchLabels:
       app: shorturl-server
+  replicas: 3
   template:
     metadata:
       labels:
@@ -19,9 +20,12 @@ spec:
           - name: POSTGRES_DSN
             value: postgres://shorturl:shorturl@shorturl-postgres-svc/shorturl?sslmode=disable
         resources:
-          limits:
+          requests:
             memory: "128Mi"
-            cpu: "500m"
+            cpu: "100m"
+          limits:
+            memory: "1024Mi"
+            cpu: "1000m"
         ports:
         - containerPort: 3000
           name: http
@@ -34,6 +38,7 @@ spec:
   selector:
     matchLabels:
       app: shorturl-transform
+  replicas: 3
   template:
     metadata:
       labels:
@@ -44,8 +49,11 @@ spec:
         image: shorturl-transform:20210612030053
         imagePullPolicy: Never
         resources:
-          limits:
+          requests:
             memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
             cpu: "500m"
         ports:
         - containerPort: 4000
@@ -66,12 +74,15 @@ spec:
       labels:
         app: shorturl-postgres
     spec:
-     containers:
+      containers:
       - name: shorturl-postgres
         image: postgres:13
         resources:
-          limits:
+          requests:
             memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
             cpu: "500m"
         env:
           - name: POSTGRES_ROOT_PASSWORD
@@ -85,3 +96,10 @@ spec:
         ports:
           - containerPort: 5432
             name: tcp
+        volumeMounts:
+          - name: shorturl-postgres-storage
+            mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: shorturl-postgres-storage
+          persistentVolumeClaim:
+            claimName: shorturl-postgres-pv-claim
